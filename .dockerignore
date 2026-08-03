@@ -1,0 +1,10 @@
+target
+.git
+.idea
+*.iml
+.env
+.env.*
+*.local
+application-local.properties
+application-local.yml
+application-local.yaml
