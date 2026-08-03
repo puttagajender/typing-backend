@@ -18,7 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TypingAnalysisServiceTest {
 
     private static final Instant START = Instant.parse("2026-08-03T10:00:00Z");
-    private final TypingAnalysisService service = new TypingAnalysisService();
+    private final TypingAnalysisService service = new TypingAnalysisService(
+            RecommendationTestFactory.recommendationService());
 
     @Test
     void exactMatchProducesPerfectAccuracyAndNoMistakes() {

@@ -18,6 +18,12 @@ public class TypingAnalysisService {
 
     private static final Logger log = LoggerFactory.getLogger(TypingAnalysisService.class);
 
+    private final RecommendationService recommendationService;
+
+    public TypingAnalysisService(RecommendationService recommendationService) {
+        this.recommendationService = recommendationService;
+    }
+
     public TypingAnalysisResponse analyze(TypingAnalysisRequest request) {
         log.info("Typing analysis started");
         long durationInSeconds = Duration.between(request.startedAt(), request.completedAt()).getSeconds();
@@ -52,18 +58,33 @@ public class TypingAnalysisService {
         accuracy = Math.max(0.0, Math.min(100.0, accuracy));
         log.info("Accuracy calculated: value={}", roundToTwoDecimals(accuracy));
 
+        double roundedCorrectWpm = roundToTwoDecimals(correctWpm);
+        double roundedGrossWpm = roundToTwoDecimals(grossWpm);
+        double roundedAccuracy = roundToTwoDecimals(accuracy);
+        Recommendation recommendation = recommendationService.recommend(new RecommendationInput(
+                roundedCorrectWpm,
+                roundedGrossWpm,
+                roundedAccuracy,
+                mistakeCount));
+
         TypingAnalysisResponse response = new TypingAnalysisResponse(
-                roundToTwoDecimals(correctWpm),
-                roundToTwoDecimals(grossWpm),
-                roundToTwoDecimals(correctWpm),
-                roundToTwoDecimals(accuracy),
+                roundedCorrectWpm,
+                roundedGrossWpm,
+                roundedCorrectWpm,
+                roundedAccuracy,
                 durationInSeconds,
                 mistakeCount,
                 wrongCharacterCount,
                 missingCharacterCount,
                 extraCharacterCount,
                 mistakeDetails,
-                comparisonDetails
+                comparisonDetails,
+                recommendation.typingLevel(),
+                recommendation.typingLevel().getDisplayName(),
+                recommendation.recommendedDifficulty(),
+                recommendation.recommendedCategory(),
+                recommendation.recommendedDuration(),
+                recommendation.recommendationReason()
         );
         log.info("Typing analysis response generated");
         return response;

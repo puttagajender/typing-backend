@@ -1,6 +1,9 @@
 package com.brothers.typing.controller;
 
 import com.brothers.typing.dto.TypingAnalysisResponse;
+import com.brothers.typing.dto.RecommendationCategory;
+import com.brothers.typing.dto.RecommendedDifficulty;
+import com.brothers.typing.dto.TypingLevel;
 import com.brothers.typing.service.TypingAnalysisService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,7 +50,9 @@ class TypingAnalysisControllerTest {
     @Test
     void validRequestReturnsHttpOkAndAnalysisResponse() throws Exception {
         TypingAnalysisResponse response = new TypingAnalysisResponse(
-                1.0, 1.0, 1.0, 100.0, 60, 0, 0, 0, 0, List.of(), List.of());
+                1.0, 1.0, 1.0, 100.0, 60, 0, 0, 0, 0, List.of(), List.of(),
+                TypingLevel.BEGINNER, "Turtle", RecommendedDifficulty.EASY,
+                RecommendationCategory.GENERAL, 60, "Build consistency");
         when(service.analyze(any())).thenReturn(response);
 
         mockMvc.perform(post(ENDPOINT)
@@ -64,7 +69,13 @@ class TypingAnalysisControllerTest {
                 .andExpect(jsonPath("$.wrongCharacterCount").value(0))
                 .andExpect(jsonPath("$.missingCharacterCount").value(0))
                 .andExpect(jsonPath("$.extraCharacterCount").value(0))
-                .andExpect(jsonPath("$.mistakeDetails").isEmpty());
+                .andExpect(jsonPath("$.mistakeDetails").isEmpty())
+                .andExpect(jsonPath("$.typingLevel").value("BEGINNER"))
+                .andExpect(jsonPath("$.typingLevelDisplayName").value("Turtle"))
+                .andExpect(jsonPath("$.recommendedDifficulty").value("EASY"))
+                .andExpect(jsonPath("$.recommendedCategory").value("GENERAL"))
+                .andExpect(jsonPath("$.recommendedDuration").value(60))
+                .andExpect(jsonPath("$.recommendationReason").value("Build consistency"));
 
         verify(service).analyze(any());
     }
@@ -149,7 +160,9 @@ class TypingAnalysisControllerTest {
     void originalTextBeyondAReasonableLimitIsCurrentlyPassedToService() throws Exception {
         when(service.analyze(any())).thenReturn(
                 new TypingAnalysisResponse(
-                        0, 0, 0, 100, 60, 0, 0, 0, 0, List.of(), List.of()));
+                        0, 0, 0, 100, 60, 0, 0, 0, 0, List.of(), List.of(),
+                        TypingLevel.BEGINNER, "Turtle", RecommendedDifficulty.EASY,
+                        RecommendationCategory.GENERAL, 60, "Build consistency"));
         String longText = "a".repeat(5001);
 
         mockMvc.perform(post(ENDPOINT)
@@ -164,7 +177,9 @@ class TypingAnalysisControllerTest {
     void typedTextBeyondAReasonableLimitIsCurrentlyPassedToService() throws Exception {
         when(service.analyze(any())).thenReturn(
                 new TypingAnalysisResponse(
-                        0, 0, 0, 0, 60, 0, 0, 0, 0, List.of(), List.of()));
+                        0, 0, 0, 0, 60, 0, 0, 0, 0, List.of(), List.of(),
+                        TypingLevel.BEGINNER, "Turtle", RecommendedDifficulty.EASY,
+                        RecommendationCategory.GENERAL, 60, "Build consistency"));
         String longText = "a".repeat(5001);
 
         mockMvc.perform(post(ENDPOINT)

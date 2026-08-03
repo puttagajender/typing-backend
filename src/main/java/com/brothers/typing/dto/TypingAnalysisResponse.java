@@ -13,6 +13,12 @@ public record TypingAnalysisResponse(
         int missingCharacterCount,
         int extraCharacterCount,
         List<MistakeDetailResponse> mistakeDetails,
-        List<ComparisonDetailResponse> comparisonDetails
+        List<ComparisonDetailResponse> comparisonDetails,
+        TypingLevel typingLevel,
+        String typingLevelDisplayName,
+        RecommendedDifficulty recommendedDifficulty,
+        RecommendationCategory recommendedCategory,
+        int recommendedDuration,
+        String recommendationReason
 ) {
 }
