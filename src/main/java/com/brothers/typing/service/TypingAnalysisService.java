@@ -30,10 +30,7 @@ public class TypingAnalysisService {
 
     public TypingAnalysisResponse analyze(TypingAnalysisRequest request) {
         log.info("Typing analysis started");
-        long durationInSeconds = Duration.between(request.startedAt(), request.completedAt()).getSeconds();
-        if (durationInSeconds <= 0) {
-            throw new IllegalArgumentException("completedAt must be after startedAt");
-        }
+        long durationInSeconds = calculateDurationInSeconds(request);
         log.info("Duration calculated: seconds={}", durationInSeconds);
 
         List<ComparisonDetailResponse> comparisonDetails = align(
@@ -42,46 +39,30 @@ public class TypingAnalysisService {
                 .filter(detail -> detail.mistakeType() != MistakeType.MATCH)
                 .map(this::toMistakeDetail)
                 .toList();
-        int mistakeCount = mistakeDetails.size();
-        int wrongCharacterCount = countMistakes(mistakeDetails, MistakeType.WRONG_CHARACTER);
-        int missingCharacterCount = countMistakes(mistakeDetails, MistakeType.MISSING_CHARACTER);
-        int extraCharacterCount = countMistakes(mistakeDetails, MistakeType.EXTRA_CHARACTER);
-        log.info("Mistake detection completed: count={}", mistakeCount);
-
-        double minutes = durationInSeconds / 60.0;
-        double grossWpm = (request.typedText().length() / 5.0) / minutes;
-        int comparisonLength = comparisonDetails.size();
-        int correctCharacterCount = countComparisons(comparisonDetails, MistakeType.MATCH);
-        double correctWpm = (correctCharacterCount / 5.0) / minutes;
+        TypingStatistics statistics = TypingStatisticsCalculator.calculate(
+                request.typedText().length(), comparisonDetails, durationInSeconds);
+        log.info("Mistake detection completed: count={}", statistics.netMistakes());
         log.info("WPM calculated: gross={}, correct={}",
-                roundToTwoDecimals(grossWpm), roundToTwoDecimals(correctWpm));
+                statistics.grossWpm(), statistics.correctWpm());
+        log.info("Accuracy calculated: value={}", statistics.accuracy());
 
-        double accuracy = comparisonLength == 0
-                ? 100.0
-                : (double) correctCharacterCount / comparisonLength * 100.0;
-        accuracy = Math.max(0.0, Math.min(100.0, accuracy));
-        log.info("Accuracy calculated: value={}", roundToTwoDecimals(accuracy));
-
-        double roundedCorrectWpm = roundToTwoDecimals(correctWpm);
-        double roundedGrossWpm = roundToTwoDecimals(grossWpm);
-        double roundedAccuracy = roundToTwoDecimals(accuracy);
         Recommendation recommendation = recommendationService.recommend(new RecommendationInput(
-                roundedCorrectWpm,
-                roundedGrossWpm,
-                roundedAccuracy,
-                mistakeCount));
+                statistics.correctWpm(),
+                statistics.grossWpm(),
+                statistics.accuracy(),
+                statistics.netMistakes()));
         WeakKeyAnalysis weakKeyAnalysis = weakKeyAnalysisService.analyze(comparisonDetails);
 
         TypingAnalysisResponse response = new TypingAnalysisResponse(
-                roundedCorrectWpm,
-                roundedGrossWpm,
-                roundedCorrectWpm,
-                roundedAccuracy,
-                durationInSeconds,
-                mistakeCount,
-                wrongCharacterCount,
-                missingCharacterCount,
-                extraCharacterCount,
+                statistics.correctWpm(),
+                statistics.grossWpm(),
+                statistics.correctWpm(),
+                statistics.accuracy(),
+                statistics.durationInSeconds(),
+                statistics.netMistakes(),
+                statistics.wrongCharacters(),
+                statistics.missingCharacters(),
+                statistics.extraCharacters(),
                 mistakeDetails,
                 comparisonDetails,
                 recommendation.typingLevel(),
@@ -98,16 +79,17 @@ public class TypingAnalysisService {
         return response;
     }
 
-    private int countMistakes(List<MistakeDetailResponse> mistakes, MistakeType type) {
-        return (int) mistakes.stream()
-                .filter(mistake -> mistake.mistakeType() == type)
-                .count();
-    }
-
-    private int countComparisons(List<ComparisonDetailResponse> comparisons, MistakeType type) {
-        return (int) comparisons.stream()
-                .filter(comparison -> comparison.mistakeType() == type)
-                .count();
+    /**
+     * Calculates the positive whole-second duration represented by the API timestamps.
+     * Sub-second attempts are rejected because the existing response contract exposes
+     * duration as whole seconds and WPM cannot safely divide by zero.
+     */
+    private long calculateDurationInSeconds(TypingAnalysisRequest request) {
+        long seconds = Duration.between(request.startedAt(), request.completedAt()).getSeconds();
+        if (seconds <= 0) {
+            throw new IllegalArgumentException("completedAt must be after startedAt");
+        }
+        return seconds;
     }
 
     private MistakeDetailResponse toMistakeDetail(ComparisonDetailResponse detail) {
@@ -194,7 +176,4 @@ public class TypingAnalysisService {
         return distances;
     }
 
-    private double roundToTwoDecimals(double value) {
-        return Math.round(value * 100.0) / 100.0;
-    }
 }
