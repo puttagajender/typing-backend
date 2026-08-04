@@ -1,6 +1,7 @@
 package com.brothers.typing.dto;
 
 import java.util.List;
+import java.util.Map;
 
 public record TypingAnalysisResponse(
         double correctWpm,
@@ -19,6 +20,9 @@ public record TypingAnalysisResponse(
         RecommendedDifficulty recommendedDifficulty,
         RecommendationCategory recommendedCategory,
         int recommendedDuration,
-        String recommendationReason
+        String recommendationReason,
+        List<WeakKeyResponse> weakKeys,
+        String weakKeySummary,
+        Map<String, List<String>> suggestedPracticeWords
 ) {
 }

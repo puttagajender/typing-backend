@@ -19,7 +19,8 @@ class TypingAnalysisServiceTest {
 
     private static final Instant START = Instant.parse("2026-08-03T10:00:00Z");
     private final TypingAnalysisService service = new TypingAnalysisService(
-            RecommendationTestFactory.recommendationService());
+            RecommendationTestFactory.recommendationService(),
+            RecommendationTestFactory.weakKeyAnalysisService());
 
     @Test
     void exactMatchProducesPerfectAccuracyAndNoMistakes() {
@@ -34,6 +35,81 @@ class TypingAnalysisServiceTest {
         assertComparisonTypes(response,
                 MistakeType.MATCH, MistakeType.MATCH, MistakeType.MATCH,
                 MistakeType.MATCH, MistakeType.MATCH);
+    }
+
+    @Test
+    void twoPassagesJoinedWithSpaceAreAnalyzedAsContinuousText() {
+        String text = "The first passage ends here. The second passage starts now.";
+
+        TypingAnalysisResponse response = service.analyze(request(text, text, 60));
+
+        assertEquals(100.0, response.accuracy());
+        assertEquals(0, response.mistakeCount());
+        assertEquals(text.length(), response.comparisonDetails().size());
+    }
+
+    @Test
+    void fiveJoinedPassagesAreAnalyzedWithoutSentenceAssumptions() {
+        String text = String.join(" ", List.of(
+                "Passage one.", "Passage two.", "Passage three.",
+                "Passage four.", "Passage five."));
+
+        TypingAnalysisResponse response = service.analyze(request(text, text, 120));
+
+        assertEquals(100.0, response.accuracy());
+        assertEquals(0, response.mistakeCount());
+    }
+
+    @Test
+    void newlineSeparatedPassagesPreserveSeparators() {
+        String original = "First  passage.\nSecond passage.\n\nThird passage.";
+        String typed = "First  passage.\nSecond passage.\n\nThird passage.";
+
+        TypingAnalysisResponse response = service.analyze(request(original, typed, 60));
+
+        assertEquals(100.0, response.accuracy());
+        assertEquals(0, response.mistakeCount());
+        assertTrue(response.comparisonDetails().stream()
+                .filter(detail -> detail.expectedCharacter() != null && detail.expectedCharacter() == '\n')
+                .allMatch(detail -> detail.mistakeType() == MistakeType.MATCH));
+    }
+
+    @Test
+    void completedPassageAndPartialNextPassageMarkOnlyRemainingTextMissing() {
+        String first = "The first passage is complete.";
+        String second = "The next passage is only partly typed.";
+        String original = first + " " + second;
+        String typed = first + " " + "The next passage";
+
+        TypingAnalysisResponse response = service.analyze(request(original, typed, 30));
+
+        assertEquals(original.length() - typed.length(), response.missingCharacterCount());
+        assertEquals(0, response.wrongCharacterCount());
+        assertEquals(0, response.extraCharacterCount());
+        assertConsistentMistakeTotals(response);
+    }
+
+    @Test
+    void longValidTimedInputIsAnalyzedWithinExpectedBounds() {
+        String original = "continuous typing passage ".repeat(100);
+        String typed = original.substring(0, original.length() - 37);
+
+        TypingAnalysisResponse response = service.analyze(request(original, typed, 300));
+
+        assertEquals(300, response.durationInSeconds());
+        assertEquals(37, response.missingCharacterCount());
+        assertTrue(response.accuracy() >= 0.0 && response.accuracy() <= 100.0);
+        assertTrue(response.correctWpm() <= response.grossWpm());
+        assertConsistentMistakeTotals(response);
+    }
+
+    @Test
+    void trailingSeparatorIsNotTrimmedOrIgnored() {
+        TypingAnalysisResponse response = service.analyze(request("First. Second. ", "First. Second.", 60));
+
+        assertEquals(1, response.missingCharacterCount());
+        assertEquals(Character.valueOf(' '), response.mistakeDetails().get(0).expectedCharacter());
+        assertConsistentMistakeTotals(response);
     }
 
     @Test
@@ -457,6 +533,14 @@ class TypingAnalysisServiceTest {
             TypingAnalysisResponse response, MistakeDetailResponse... expectedDetails) {
         assertEquals(expectedDetails.length, response.mistakeCount());
         assertEquals(List.of(expectedDetails), response.mistakeDetails());
+    }
+
+    private void assertConsistentMistakeTotals(TypingAnalysisResponse response) {
+        assertEquals(response.mistakeDetails().size(), response.mistakeCount());
+        assertEquals(response.mistakeCount(),
+                response.wrongCharacterCount()
+                        + response.missingCharacterCount()
+                        + response.extraCharacterCount());
     }
 
     private void assertComparisonTypes(

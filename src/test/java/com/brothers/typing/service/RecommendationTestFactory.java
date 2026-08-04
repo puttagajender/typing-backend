@@ -8,6 +8,8 @@ import com.brothers.typing.dto.RecommendedDifficulty;
 import com.brothers.typing.dto.TypingLevel;
 
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 final class RecommendationTestFactory {
 
@@ -40,6 +42,20 @@ final class RecommendationTestFactory {
                 category(85, 10, RecommendationCategory.JAVA),
                 category(95, 5, RecommendationCategory.PROGRAMMING)));
         return properties;
+    }
+
+    static WeakKeyAnalysisService weakKeyAnalysisService() {
+        com.brothers.typing.config.WeakKeyProperties properties =
+                new com.brothers.typing.config.WeakKeyProperties();
+        properties.setMinimumSpaceMistakes(3);
+        properties.setMaximumWeakKeys(5);
+        properties.setNoWeakKeysSummary("No weak keys detected.");
+        Map<String, List<String>> words = new LinkedHashMap<>();
+        words.put("r", List.of("correct", "remember", "practice"));
+        words.put("t", List.of("typing", "better", "today"));
+        words.put("e", List.of("every", "speed", "exercise"));
+        properties.setPracticeWords(words);
+        return new WeakKeyAnalysisService(properties);
     }
 
     private static DifficultyPromotionRule promotion(

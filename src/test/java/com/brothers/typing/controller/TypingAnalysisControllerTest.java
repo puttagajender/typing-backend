@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -52,7 +53,8 @@ class TypingAnalysisControllerTest {
         TypingAnalysisResponse response = new TypingAnalysisResponse(
                 1.0, 1.0, 1.0, 100.0, 60, 0, 0, 0, 0, List.of(), List.of(),
                 TypingLevel.BEGINNER, "Turtle", RecommendedDifficulty.EASY,
-                RecommendationCategory.GENERAL, 60, "Build consistency");
+                RecommendationCategory.GENERAL, 60, "Build consistency",
+                List.of(), "No weak keys detected.", Map.of());
         when(service.analyze(any())).thenReturn(response);
 
         mockMvc.perform(post(ENDPOINT)
@@ -75,7 +77,10 @@ class TypingAnalysisControllerTest {
                 .andExpect(jsonPath("$.recommendedDifficulty").value("EASY"))
                 .andExpect(jsonPath("$.recommendedCategory").value("GENERAL"))
                 .andExpect(jsonPath("$.recommendedDuration").value(60))
-                .andExpect(jsonPath("$.recommendationReason").value("Build consistency"));
+                .andExpect(jsonPath("$.recommendationReason").value("Build consistency"))
+                .andExpect(jsonPath("$.weakKeys").isEmpty())
+                .andExpect(jsonPath("$.weakKeySummary").value("No weak keys detected."))
+                .andExpect(jsonPath("$.suggestedPracticeWords").isMap());
 
         verify(service).analyze(any());
     }
@@ -157,37 +162,37 @@ class TypingAnalysisControllerTest {
     }
 
     @Test
-    void originalTextBeyondAReasonableLimitIsCurrentlyPassedToService() throws Exception {
+    void maximumPermittedRequestSizeIsAccepted() throws Exception {
         when(service.analyze(any())).thenReturn(
                 new TypingAnalysisResponse(
                         0, 0, 0, 100, 60, 0, 0, 0, 0, List.of(), List.of(),
                         TypingLevel.BEGINNER, "Turtle", RecommendedDifficulty.EASY,
-                        RecommendationCategory.GENERAL, 60, "Build consistency"));
-        String longText = "a".repeat(5001);
+                        RecommendationCategory.GENERAL, 60, "Build consistency",
+                        List.of(), "No weak keys detected.", Map.of()));
+        String longText = "a".repeat(6000);
 
         mockMvc.perform(post(ENDPOINT)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestWithJsonStrings(longText, "hello")))
+                        .content(requestWithJsonStrings(longText, longText)))
                 .andExpect(status().isOk());
 
         verify(service).analyze(any());
     }
 
     @Test
-    void typedTextBeyondAReasonableLimitIsCurrentlyPassedToService() throws Exception {
-        when(service.analyze(any())).thenReturn(
-                new TypingAnalysisResponse(
-                        0, 0, 0, 0, 60, 0, 0, 0, 0, List.of(), List.of(),
-                        TypingLevel.BEGINNER, "Turtle", RecommendedDifficulty.EASY,
-                        RecommendationCategory.GENERAL, 60, "Build consistency"));
-        String longText = "a".repeat(5001);
+    void inputExceedingMaximumSizeIsRejected() throws Exception {
+        String longText = "a".repeat(6001);
 
         mockMvc.perform(post(ENDPOINT)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestWithJsonStrings("hello", longText)))
-                .andExpect(status().isOk());
+                        .content(requestWithJsonStrings(longText, longText)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors.originalText")
+                        .value("originalText must not exceed 6000 characters"))
+                .andExpect(jsonPath("$.validationErrors.typedText")
+                        .value("typedText must not exceed 6000 characters"));
 
-        verify(service).analyze(any());
+        verifyNoInteractions(service);
     }
 
     @Test

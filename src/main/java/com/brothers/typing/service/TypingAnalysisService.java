@@ -19,9 +19,13 @@ public class TypingAnalysisService {
     private static final Logger log = LoggerFactory.getLogger(TypingAnalysisService.class);
 
     private final RecommendationService recommendationService;
+    private final WeakKeyAnalysisService weakKeyAnalysisService;
 
-    public TypingAnalysisService(RecommendationService recommendationService) {
+    public TypingAnalysisService(
+            RecommendationService recommendationService,
+            WeakKeyAnalysisService weakKeyAnalysisService) {
         this.recommendationService = recommendationService;
+        this.weakKeyAnalysisService = weakKeyAnalysisService;
     }
 
     public TypingAnalysisResponse analyze(TypingAnalysisRequest request) {
@@ -66,6 +70,7 @@ public class TypingAnalysisService {
                 roundedGrossWpm,
                 roundedAccuracy,
                 mistakeCount));
+        WeakKeyAnalysis weakKeyAnalysis = weakKeyAnalysisService.analyze(comparisonDetails);
 
         TypingAnalysisResponse response = new TypingAnalysisResponse(
                 roundedCorrectWpm,
@@ -84,7 +89,10 @@ public class TypingAnalysisService {
                 recommendation.recommendedDifficulty(),
                 recommendation.recommendedCategory(),
                 recommendation.recommendedDuration(),
-                recommendation.recommendationReason()
+                recommendation.recommendationReason(),
+                weakKeyAnalysis.weakKeys(),
+                weakKeyAnalysis.weakKeySummary(),
+                weakKeyAnalysis.suggestedPracticeWords()
         );
         log.info("Typing analysis response generated");
         return response;
@@ -111,7 +119,7 @@ public class TypingAnalysisService {
     }
 
     private List<ComparisonDetailResponse> align(String original, String typed) {
-        int[][] distances = buildDistanceMatrix(original, typed);
+        short[][] distances = buildDistanceMatrix(original, typed);
         List<ComparisonDetailResponse> comparisons = new ArrayList<>();
         int originalIndex = 0;
         int typedIndex = 0;
@@ -164,20 +172,20 @@ public class TypingAnalysisService {
         return List.copyOf(comparisons);
     }
 
-    private int[][] buildDistanceMatrix(String original, String typed) {
-        int[][] distances = new int[original.length() + 1][typed.length() + 1];
+    private short[][] buildDistanceMatrix(String original, String typed) {
+        short[][] distances = new short[original.length() + 1][typed.length() + 1];
 
         for (int i = original.length(); i >= 0; i--) {
-            distances[i][typed.length()] = original.length() - i;
+            distances[i][typed.length()] = (short) (original.length() - i);
         }
         for (int j = typed.length(); j >= 0; j--) {
-            distances[original.length()][j] = typed.length() - j;
+            distances[original.length()][j] = (short) (typed.length() - j);
         }
 
         for (int i = original.length() - 1; i >= 0; i--) {
             for (int j = typed.length() - 1; j >= 0; j--) {
                 int substitutionCost = original.charAt(i) == typed.charAt(j) ? 0 : 1;
-                distances[i][j] = Math.min(
+                distances[i][j] = (short) Math.min(
                         Math.min(distances[i + 1][j] + 1, distances[i][j + 1] + 1),
                         distances[i + 1][j + 1] + substitutionCost
                 );
