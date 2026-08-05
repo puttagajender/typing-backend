@@ -1,5 +1,6 @@
 package com.brothers.typing.controller;
 
+import com.brothers.typing.learning.service.ExerciseGenerationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException exception) {
         log.info("Exception occurred: type=illegal-argument");
+        return errorResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), Map.of());
+    }
+
+    @ExceptionHandler(ExerciseGenerationException.class)
+    public ResponseEntity<Map<String, Object>> handleExerciseGeneration(
+            ExerciseGenerationException exception) {
+        log.info("Exception occurred: type=exercise-generation");
         return errorResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), Map.of());
     }
 
