@@ -1,15 +1,11 @@
 package com.brothers.typing.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 
 @Service
 public class RecommendationService {
-
-    private static final Logger log = LoggerFactory.getLogger(RecommendationService.class);
 
     private final RecommendationRuleEngine ruleEngine;
 
@@ -26,10 +22,6 @@ public class RecommendationService {
         Objects.requireNonNull(recommendation.recommendedCategory(), "Category must not be null");
         Objects.requireNonNull(recommendation.recommendationReason(), "Reason must not be null");
 
-        log.info("Calculated level: {}", recommendation.typingLevel());
-        log.info("Recommended difficulty: {}", recommendation.recommendedDifficulty());
-        log.info("Recommended category: {}", recommendation.recommendedCategory());
-        log.info("Recommended duration: seconds={}", recommendation.recommendedDuration());
         return recommendation;
     }
 }

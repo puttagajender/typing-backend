@@ -104,6 +104,18 @@ class TypingAnalysisServiceTest {
     }
 
     @Test
+    void maximumLengthExactMatchAvoidsQuadraticAlignmentStorage() {
+        String text = "a".repeat(6000);
+
+        TypingAnalysisResponse response = service.analyze(request(text, text, 300));
+
+        assertEquals(6000, text.length());
+        assertEquals(6000, response.comparisonDetails().size());
+        assertEquals(100.0, response.accuracy());
+        assertEquals(0, response.mistakeCount());
+    }
+
+    @Test
     void trailingSeparatorIsNotTrimmedOrIgnored() {
         TypingAnalysisResponse response = service.analyze(request("First. Second. ", "First. Second.", 60));
 

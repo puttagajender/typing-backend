@@ -29,11 +29,8 @@ public class TypingAnalysisController {
     public ResponseEntity<TypingAnalysisResponse> analyze(
             @Valid @RequestBody TypingAnalysisRequest request) {
         log.info("Typing analysis request received");
-        log.info("Request validation completed");
         TypingAnalysisResponse response = typingAnalysisService.analyze(request);
-        ResponseEntity<TypingAnalysisResponse> responseEntity = ResponseEntity.ok(response);
-        log.info("Typing analysis response sent");
-        return responseEntity;
+        return ResponseEntity.ok(response);
     }
 
         @GetMapping("/hello")

@@ -104,6 +104,20 @@ class TypingAnalysisControllerTest {
     }
 
     @Test
+    void malformedTimestampReturnsSanitizedBadRequest() throws Exception {
+        mockMvc.perform(post(ENDPOINT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestWith("\"hello\"", "\"hello\"", "\"not-an-instant\"", validEnd())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Request body is missing or malformed"))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("DateTimeParseException"))));
+
+        verifyNoInteractions(service);
+    }
+
+    @Test
     void nullOriginalTextReturnsValidationError() throws Exception {
         assertValidationError(requestWith("null", "\"hello\"", validStart(), validEnd()),
                 "originalText", "originalText must not be blank");

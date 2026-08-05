@@ -29,9 +29,7 @@ public class TypingAnalysisService {
     }
 
     public TypingAnalysisResponse analyze(TypingAnalysisRequest request) {
-        log.info("Typing analysis started");
         long durationInSeconds = calculateDurationInSeconds(request);
-        log.info("Duration calculated: seconds={}", durationInSeconds);
 
         List<ComparisonDetailResponse> comparisonDetails = align(
                 request.originalText(), request.typedText());
@@ -41,11 +39,6 @@ public class TypingAnalysisService {
                 .toList();
         TypingStatistics statistics = TypingStatisticsCalculator.calculate(
                 request.typedText().length(), comparisonDetails, durationInSeconds);
-        log.info("Mistake detection completed: count={}", statistics.netMistakes());
-        log.info("WPM calculated: gross={}, correct={}",
-                statistics.grossWpm(), statistics.correctWpm());
-        log.info("Accuracy calculated: value={}", statistics.accuracy());
-
         Recommendation recommendation = recommendationService.recommend(new RecommendationInput(
                 statistics.correctWpm(),
                 statistics.grossWpm(),
@@ -75,7 +68,11 @@ public class TypingAnalysisService {
                 weakKeyAnalysis.weakKeySummary(),
                 weakKeyAnalysis.suggestedPracticeWords()
         );
-        log.info("Typing analysis response generated");
+        log.info("Typing analysis completed: durationSeconds={}, grossWpm={}, correctWpm={}, "
+                        + "accuracy={}, mistakes={}, recommendation={}/{}/{}s",
+                statistics.durationInSeconds(), statistics.grossWpm(), statistics.correctWpm(),
+                statistics.accuracy(), statistics.netMistakes(), recommendation.typingLevel(),
+                recommendation.recommendedDifficulty(), recommendation.recommendedDuration());
         return response;
     }
 
@@ -101,6 +98,16 @@ public class TypingAnalysisService {
     }
 
     private List<ComparisonDetailResponse> align(String original, String typed) {
+        if (original.equals(typed)) {
+            List<ComparisonDetailResponse> exactMatches = new ArrayList<>(original.length());
+            for (int index = 0; index < original.length(); index++) {
+                char character = original.charAt(index);
+                exactMatches.add(new ComparisonDetailResponse(
+                        index, index, character, character, MistakeType.MATCH));
+            }
+            return List.copyOf(exactMatches);
+        }
+
         short[][] distances = buildDistanceMatrix(original, typed);
         List<ComparisonDetailResponse> comparisons = new ArrayList<>();
         int originalIndex = 0;

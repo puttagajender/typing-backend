@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -49,9 +51,15 @@ public class GlobalExceptionHandler {
         return errorResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Content type is not supported", Map.of());
     }
 
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    public ResponseEntity<Map<String, Object>> handleNotFound(Exception exception) {
+        log.info("Exception occurred: type=not-found");
+        return errorResponse(HttpStatus.NOT_FOUND, "Resource not found", Map.of());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleUnexpectedException(Exception exception) {
-        log.info("Exception occurred: type=internal");
+        log.error("Unexpected exception: type={}", exception.getClass().getName(), exception);
         return errorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred",

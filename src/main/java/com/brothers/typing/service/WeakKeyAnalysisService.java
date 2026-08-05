@@ -4,8 +4,6 @@ import com.brothers.typing.config.WeakKeyProperties;
 import com.brothers.typing.dto.ComparisonDetailResponse;
 import com.brothers.typing.dto.MistakeType;
 import com.brothers.typing.dto.WeakKeyResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,12 +13,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class WeakKeyAnalysisService {
-
-    private static final Logger log = LoggerFactory.getLogger(WeakKeyAnalysisService.class);
 
     private final WeakKeyProperties properties;
 
@@ -44,10 +39,6 @@ public class WeakKeyAnalysisService {
 
         String summary = createSummary(weakKeys);
         Map<String, List<String>> suggestedWords = suggestedWords(weakKeys);
-        log.info("Weak-key count: {}", weakKeys.size());
-        log.info("Top weak keys: {}", weakKeys.stream()
-                .map(WeakKeyResponse::character)
-                .collect(Collectors.joining(",")));
         return new WeakKeyAnalysis(weakKeys, summary, suggestedWords);
     }
 
