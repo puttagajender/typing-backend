@@ -1,6 +1,9 @@
 package com.brothers.typing.controller;
 
 import com.brothers.typing.learning.service.ExerciseGenerationException;
+import com.brothers.typing.learning.recovery.service.WeakKeyRecoveryException;
+import com.brothers.typing.learning.coach.service.CoachingRequestException;
+import com.brothers.typing.learning.coach.service.CoachingUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -43,6 +46,28 @@ public class GlobalExceptionHandler {
             ExerciseGenerationException exception) {
         log.info("Exception occurred: type=exercise-generation");
         return errorResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), Map.of());
+    }
+
+    @ExceptionHandler(WeakKeyRecoveryException.class)
+    public ResponseEntity<Map<String, Object>> handleWeakKeyRecovery(
+            WeakKeyRecoveryException exception) {
+        log.info("Exception occurred: type=weak-key-recovery");
+        return errorResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), Map.of());
+    }
+
+    @ExceptionHandler(CoachingRequestException.class)
+    public ResponseEntity<Map<String, Object>> handleCoachingRequest(
+            CoachingRequestException exception) {
+        log.info("Exception occurred: type=coaching-request");
+        return errorResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), Map.of());
+    }
+
+    @ExceptionHandler(CoachingUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handleCoachingUnavailable(
+            CoachingUnavailableException exception) {
+        log.error("Coaching unavailable after AI and fallback processing");
+        return errorResponse(HttpStatus.SERVICE_UNAVAILABLE,
+                "Coaching is temporarily unavailable", Map.of());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

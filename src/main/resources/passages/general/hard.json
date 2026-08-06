@@ -1,0 +1,18 @@
+[
+  {
+    "id": "GENERAL_HARD_001",
+    "category": "GENERAL",
+    "difficulty": "HARD",
+    "text": "Disciplined preparation turns ambitious goals into manageable routines that remain useful when motivation changes.",
+    "wordCount": 14,
+    "active": true
+  },
+  {
+    "id": "GENERAL_HARD_002",
+    "category": "GENERAL",
+    "difficulty": "HARD",
+    "text": "Constructive feedback strengthens professional relationships because specific observations encourage practical and measurable improvement.",
+    "wordCount": 13,
+    "active": true
+  }
+]

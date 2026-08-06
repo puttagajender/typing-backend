@@ -1,0 +1,18 @@
+[
+  {
+    "id": "SOFTWARE_DEVELOPMENT_EASY_001",
+    "category": "SOFTWARE_DEVELOPMENT",
+    "difficulty": "EASY",
+    "text": "A function completes one defined task and can return a useful result.",
+    "wordCount": 12,
+    "active": true
+  },
+  {
+    "id": "SOFTWARE_DEVELOPMENT_EASY_002",
+    "category": "SOFTWARE_DEVELOPMENT",
+    "difficulty": "EASY",
+    "text": "Tests check expected behavior and help teams find mistakes early.",
+    "wordCount": 10,
+    "active": true
+  }
+]

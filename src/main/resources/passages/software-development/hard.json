@@ -1,0 +1,18 @@
+[
+  {
+    "id": "SOFTWARE_DEVELOPMENT_HARD_001",
+    "category": "SOFTWARE_DEVELOPMENT",
+    "difficulty": "HARD",
+    "text": "Database transactions preserve consistency by grouping related changes so they either complete together or leave stored data unchanged.",
+    "wordCount": 18,
+    "active": true
+  },
+  {
+    "id": "SOFTWARE_DEVELOPMENT_HARD_002",
+    "category": "SOFTWARE_DEVELOPMENT",
+    "difficulty": "HARD",
+    "text": "Secure systems validate untrusted input, limit privileges, and record important events without exposing sensitive information.",
+    "wordCount": 15,
+    "active": true
+  }
+]

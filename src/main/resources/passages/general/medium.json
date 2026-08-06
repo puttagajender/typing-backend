@@ -1,0 +1,18 @@
+[
+  {
+    "id": "GENERAL_MEDIUM_001",
+    "category": "GENERAL",
+    "difficulty": "MEDIUM",
+    "text": "Students learn more effectively when they review difficult ideas and ask thoughtful questions.",
+    "wordCount": 13,
+    "active": true
+  },
+  {
+    "id": "GENERAL_MEDIUM_002",
+    "category": "GENERAL",
+    "difficulty": "MEDIUM",
+    "text": "Regular movement, balanced meals, and sufficient rest support health during demanding weeks.",
+    "wordCount": 12,
+    "active": true
+  }
+]

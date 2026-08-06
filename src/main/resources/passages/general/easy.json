@@ -1,0 +1,18 @@
+[
+  {
+    "id": "GENERAL_EASY_001",
+    "category": "GENERAL",
+    "difficulty": "EASY",
+    "text": "Small daily goals help people build confidence and steady habits.",
+    "wordCount": 10,
+    "active": true
+  },
+  {
+    "id": "GENERAL_EASY_002",
+    "category": "GENERAL",
+    "difficulty": "EASY",
+    "text": "Clear communication helps families solve problems with patience and respect.",
+    "wordCount": 10,
+    "active": true
+  }
+]

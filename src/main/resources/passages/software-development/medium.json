@@ -1,0 +1,18 @@
+[
+  {
+    "id": "SOFTWARE_DEVELOPMENT_MEDIUM_001",
+    "category": "SOFTWARE_DEVELOPMENT",
+    "difficulty": "MEDIUM",
+    "text": "An interface defines a clear contract so separate components can collaborate without sharing implementation details.",
+    "wordCount": 15,
+    "active": true
+  },
+  {
+    "id": "SOFTWARE_DEVELOPMENT_MEDIUM_002",
+    "category": "SOFTWARE_DEVELOPMENT",
+    "difficulty": "MEDIUM",
+    "text": "A cache stores frequently requested data to reduce repeated work and improve response times.",
+    "wordCount": 14,
+    "active": true
+  }
+]
