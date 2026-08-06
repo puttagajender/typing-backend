@@ -4,6 +4,7 @@ import com.brothers.typing.learning.service.ExerciseGenerationException;
 import com.brothers.typing.learning.recovery.service.WeakKeyRecoveryException;
 import com.brothers.typing.learning.coach.service.CoachingRequestException;
 import com.brothers.typing.learning.coach.service.CoachingUnavailableException;
+import com.brothers.typing.practice.passage.PracticePassageNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -13,8 +14,10 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -39,6 +42,31 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException exception) {
         log.info("Exception occurred: type=illegal-argument");
         return errorResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), Map.of());
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingRequestParameter(
+            MissingServletRequestParameterException exception) {
+        log.info("Exception occurred: type=missing-request-parameter, parameter={}",
+                exception.getParameterName());
+        return errorResponse(HttpStatus.BAD_REQUEST,
+                "Required query parameter is missing: " + exception.getParameterName(), Map.of());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleRequestParameterTypeMismatch(
+            MethodArgumentTypeMismatchException exception) {
+        log.info("Exception occurred: type=request-parameter-type-mismatch, parameter={}",
+                exception.getName());
+        return errorResponse(HttpStatus.BAD_REQUEST,
+                "Invalid value for query parameter: " + exception.getName(), Map.of());
+    }
+
+    @ExceptionHandler(PracticePassageNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePracticePassageNotFound(
+            PracticePassageNotFoundException exception) {
+        log.info("Exception occurred: type=practice-passage-not-found");
+        return errorResponse(HttpStatus.NOT_FOUND, exception.getMessage(), Map.of());
     }
 
     @ExceptionHandler(ExerciseGenerationException.class)
